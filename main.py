@@ -17,9 +17,22 @@ def apply_func_ids(string):
 def apply_func_seqs(string):
     string = string.split('-')[0]
     return string
+
+def sort_sorted():
+    x_lis, y_lis, z_lis = [], [], []
+    for i in IDS:
+        path = TRAIN_DATA_PATH + i + '.csv'
+        csv = pd.read_csv(path)
+        x_1, y_1, z_1 = torch.tensor(csv['x_1']), torch.tensor(csv['y_1']), torch.tensor(csv['z_1'])
+        x_lis.append(x_1), y_lis.append(y_1), z_lis.append(z_1)
+    padded_x, padded_y, padded_z = pad_sequence(x_lis, batch_first=True, padding_value=0), pad_sequence(y_lis, batch_first=True, padding_value=0), pad_sequence(z_lis, batch_first=True, padding_value=0)
+    return padded_x, padded_y, padded_z
+
 IDS = list(pd.read_csv(SEQUENCES_PATH)['target_id'].apply(apply_func_ids))
 SEQUENCES = list(pd.read_csv(SEQUENCES_PATH)['sequence'].apply(apply_func_seqs).unique())
 print(IDS)
+x_1,y_1,z_1 = sort_sorted()
+print(x_1)
 '''
 model input -> Sequence, individual nucleotides
 '''
@@ -27,11 +40,7 @@ def one_hot(sequence):
     maps = {'A':1, 'C':2, 'G':3, 'U':4, 'X':0}
     seqs = []
     for i in sequence:
-        if i!='-':
-            seqs.append(maps[i])
-        else:
-            for j in range(len(sequence) - sequence.index(i) + 1):
-                seqs.append(0)
+        seqs.append(maps[i])
     indices = torch.tensor(seqs)
     one_hot_sqn = F.one_hot(indices, num_classes=5)
     return one_hot_sqn, indices
@@ -48,7 +57,6 @@ def create_one_hot_plus_pad():
 SEQUENCES_LIST, TRUTH = create_one_hot_plus_pad()
 x = pad_sequence(SEQUENCES_LIST, batch_first=True, padding_value=0)
 mask = x.dim() != 0
-dataset = TensorDataset(x, )
 class RNAModule(nn.Module):
     def __init__(self):
         super(RNAModule, self).__init__()
